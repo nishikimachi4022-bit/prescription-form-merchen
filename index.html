@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>処方箋送信フォーム</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; }
+    .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
+    h2 { color: #28a745; text-align: center; font-size: 1.2em; }
+    .survey-group { margin-bottom: 15px; }
+    .survey-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; }
+    select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    textarea { height: 60px; }
+    .btn { background-color: #28a745; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+    .btn-select { background-color: #007bff; margin-bottom: 15px; }
+    .btn:disabled { background-color: #adb5bd; cursor: not-allowed; }
+    #preview { width: 100%; border-radius: 8px; display: none; margin-bottom: 15px; }
+    #loading { display: none; text-align: center; color: #007bff; font-weight: bold; margin-top: 10px; }
+    #statusMsg { text-align: center; font-size: 12px; color: #666; margin-bottom: 10px; background: #eee; padding: 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="mainForm">
+      <h2>処方箋送信フォーム</h2>
+      <div id="statusMsg">🔴 起動中...</div>
+
+      <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+      <button class="btn btn-select" onclick="document.getElementById('fileInput').click()">📸 処方箋を撮影する</button>
+
+      <img id="preview">
+
+      <div class="survey-group">
+        <label class="survey-label">残薬の調整</label>
+        <select id="residual">
+          <option value="なし">なし（処方通り）</option>
+          <option value="あり">あり（調整希望）</option>
+        </select>
+      </div>
+
+      <div class="survey-group">
+        <label class="survey-label">配達の希望</label>
+        <select id="delivery">
+          <option value="店舗受け取り">なし（店舗で受け取る）</option>
+          <option value="配達希望">自宅へ配達希望</option>
+        </select>
+      </div>
+
+      <div class="survey-group">
+        <label class="survey-label">ご要望・メモ</label>
+        <textarea id="request" placeholder="例：ジェネリック希望など"></textarea>
+      </div>
+
+      <button id="submitBtn" class="btn" onclick="startUpload()" disabled>送信する</button>
+      <div id="loading">送信中...しばらくお待ちください</div>
+    </div>
+
+    <div id="successMessage" style="display:none; text-align:center;">
+      <h2 style="color: #28a745;">✅ 送信完了</h2>
+      <p>処方箋を受け付けました。<br>この画面を閉じてお待ちください。</p>
+    </div>
+  </div>
+
+  <script>
+    const MY_LIFF_ID = "2008268085-RVzk6eNO";
+    let userId = "";
+
+    function setStatus(msg, color) {
+      const el = document.getElementById('statusMsg');
+      el.innerText = msg;
+      el.style.color = color || '#666';
+    }
+
+    // Step1: ページ読み込み直後に実行
+    setStatus("🟡 Step1: スクリプト起動");
+
+    // Step2: SDKを動的に挿入
+    function loadLiffSdk() {
+      setStatus("🟡 Step2: SDK読み込み中...");
+      const s = document.createElement('script');
+      s.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      s.onload = function() {
+        setStatus("🟡 Step3: SDK読み込み完了 → LIFF初期化中...");
+        initLiff();
+      };
+      s.onerror = function() {
+        setStatus("❌ Step2失敗: SDKが読み込めません（ネットワーク確認）", "red");
+      };
+      document.body.appendChild(s);
+    }
+
+    // Step3: LIFF初期化
+    function initLiff() {
+      liff.init({ liffId: MY_LIFF_ID })
+        .then(function() {
+          setStatus("🟡 Step4: LIFF初期化完了 → ログイン確認中...");
+          if (!liff.isLoggedIn()) {
+            setStatus("🟡 Step5: 未ログイン → LINEログインへ...");
+            liff.login();
+          } else {
+            setStatus("🟡 Step5: ログイン済 → プロフィール取得中...");
+            return liff.getProfile().then(function(profile) {
+              userId = profile.userId;
+              setStatus("🟢 接続完了（送信できます）", "#28a745");
+              document.getElementById('submitBtn').disabled = false;
+            });
+          }
+        })
+        .catch(function(err) {
+          setStatus("❌ Step3失敗: " + JSON.stringify(err), "red");
+        });
+    }
+
+    // プレビュー表示
+    document.getElementById('fileInput').onchange = function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('preview');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    async function startUpload() {
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput.files.length === 0) {
+        alert("写真を撮影してください");
+        return;
+      }
+
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Data = e.target.result;
+        const surveyData = {
+          userId: userId,
+          residual: document.getElementById('residual').value,
+          delivery: document.getElementById('delivery').value,
+          request: document.getElementById('request').value
+        };
+
+        google.script.run
+          .withSuccessHandler(function() {
+            document.getElementById('mainForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+          })
+          .withFailureHandler(function(err) {
+            alert("送信エラー: " + err);
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('loading').style.display = 'none';
+          })
+          .processSubmission(base64Data, surveyData);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 実行開始
+    loadLiffSdk();
+  </script>
+</body>
+</html>
