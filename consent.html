@@ -23,7 +23,6 @@
       overflow: hidden;
     }
 
-    /* ヘッダー */
     .header {
       background: linear-gradient(135deg, #28a745, #20c997);
       padding: 20px;
@@ -38,7 +37,6 @@
 
     .body { padding: 20px; }
 
-    /* 説明文 */
     .intro {
       font-size: 13px;
       color: #444;
@@ -46,7 +44,6 @@
       margin-bottom: 16px;
     }
 
-    /* 要配慮個人情報バッジ */
     .sensitive-badge {
       display: inline-block;
       background: #fff3cd;
@@ -59,7 +56,6 @@
       margin-bottom: 12px;
     }
 
-    /* ポリシー本文スクロールエリア */
     .policy-box {
       border: 1.5px solid #dee2e6;
       border-radius: 10px;
@@ -105,7 +101,6 @@
       word-break: break-all;
     }
 
-    /* スクロール促進テキスト */
     .scroll-hint {
       text-align: center;
       font-size: 11px;
@@ -114,7 +109,6 @@
     }
     .scroll-hint.hidden { display: none; }
 
-    /* チェックボックス */
     .check-wrap {
       display: flex;
       align-items: flex-start;
@@ -141,7 +135,6 @@
       cursor: pointer;
     }
 
-    /* 同意ボタン */
     .btn-agree {
       background: linear-gradient(135deg, #28a745, #20c997);
       color: white;
@@ -153,6 +146,7 @@
       cursor: pointer;
       width: 100%;
       transition: opacity 0.2s;
+      display: none;
     }
     .btn-agree:disabled {
       background: #adb5bd;
@@ -160,7 +154,13 @@
     }
     .btn-agree:not(:disabled):active { opacity: 0.85; }
 
-    /* ローディング */
+    #loadingUser {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
     #loading {
       display: none;
       text-align: center;
@@ -170,7 +170,6 @@
       font-size: 14px;
     }
 
-    /* 外部リンク注記 */
     .external-note {
       font-size: 11px;
       color: #888;
@@ -189,7 +188,7 @@
 
     <div class="body">
       <p class="intro">
-        ＬＩＮＥ処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
+        LINE処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
       </p>
 
       <span class="sensitive-badge">個人情報の取り扱いについて</span>
@@ -220,6 +219,7 @@
           <li>担当薬剤師又は医療スタッフのみが閲覧します</li>
           <li>調剤・服薬指導目的以外には使用しません</li>
           <li>法令に定める保存期間を過ぎた情報は適切な方法で消去します</li>
+        </ul>
 
         <h3>LINE社（Messaging API）への情報提供</h3>
         <p>本フォームはLINE株式会社のMessaging APIを使用しています。入力内容はLINEプラットフォームを経由して送受信されます。LINE株式会社のプライバシーポリシーは
@@ -256,7 +256,10 @@
         </label>
       </div>
 
-      <!-- 同意ボタン -->
+      <!-- 読み込み中（userId取得完了まで表示） -->
+      <p id="loadingUser">⏳ 読み込み中...</p>
+
+      <!-- 同意ボタン（userId取得完了後に表示） -->
       <button class="btn-agree" id="agreeBtn" onclick="submitConsent()" disabled>
         同意して処方箋を送信する
       </button>
@@ -272,12 +275,12 @@
     // ======================================================
     // 設定
     // ======================================================
-    const MY_LIFF_ID  = "2009938155-WhhnXhAh";  // 既存のLIFF IDをそのまま使用
-    const GAS_URL     = "https://script.google.com/macros/s/AKfycbzMghGPubDohfjZinJKNyej2pk2ELY_pNJiJg_XYq5w-hagDB_9Wwi2s-jEUnkQXZKm1g/exec";
-    const POLICY_VER  = "2025-05";  // ポリシー改訂時にここを更新する
-    const FORM_URL    = "./index.html";  // 同意後に遷移する処方箋フォーム
+    const MY_LIFF_ID = "2009938155-WhhnXhAh";
+    const GAS_URL    = "https://script.google.com/macros/s/AKfycbzMghGPubDohfjZinJKNyej2pk2ELY_pNJiJg_XYq5w-hagDB_9Wwi2s-jEUnkQXZKm1g/exec";
+    const POLICY_VER = "2025-05";
+    const FORM_URL   = "./index.html";
 
-    let userId = "";
+    let userId  = "";
     let scrolled = false;
 
     // ======================================================
@@ -287,6 +290,10 @@
       const s = document.createElement('script');
       s.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
       s.onload = initLiff;
+      s.onerror = function() {
+        document.getElementById('loadingUser').textContent =
+          "読み込みに失敗しました。画面を閉じて再度お試しください。";
+      };
       document.body.appendChild(s);
     }
 
@@ -297,12 +304,19 @@
         } else {
           liff.getProfile().then(function(profile) {
             userId = profile.userId;
-            // 同意済みかチェック
+
+            // userId取得完了 → ボタンを表示・読み込み中テキストを非表示
+            document.getElementById('loadingUser').style.display = 'none';
+            document.getElementById('agreeBtn').style.display = 'block';
+
+            // 同意済みチェック
             checkAlreadyConsented(userId);
           });
         }
       }).catch(function(err) {
         console.error("LIFF初期化失敗:", err);
+        document.getElementById('loadingUser').textContent =
+          "読み込みに失敗しました。画面を閉じて再度お試しください。";
       });
     }
 
@@ -314,13 +328,11 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.consented) {
-            // 同意済み → フォームへ直接遷移
             location.href = FORM_URL;
           }
-          // 未同意 → この画面のまま（何もしない）
         })
         .catch(function() {
-          // チェック失敗時はこの画面を表示したまま
+          // チェック失敗時はこの画面を表示したまま継続
         });
     }
 
