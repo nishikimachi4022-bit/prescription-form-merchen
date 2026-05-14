@@ -157,7 +157,7 @@
     const MY_LIFF_ID = "2009938155-WhhnXhAh";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
     let userId = "";
-    let images = []; // {base64, file}
+    let images = [];
     let currentSlide = 0;
 
     // ---------- LIFF ----------
@@ -209,7 +209,6 @@
       }
       wrap.style.display = 'block';
 
-      // スライド生成
       const badges = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
       track.innerHTML = images.map(function(img, i) {
         return `<div class="carousel-slide">
@@ -219,7 +218,6 @@
         </div>`;
       }).join('');
 
-      // ドット生成
       dots.innerHTML = images.map(function(_, i) {
         return `<div class="dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></div>`;
       }).join('');
@@ -295,7 +293,6 @@
       document.getElementById('submitBtn').disabled = true;
       document.getElementById('loading').style.display = 'block';
 
-      // 残薬データ収集
       const residualItems = Array.from(document.querySelectorAll('.residual-item')).map(function(item) {
         return {
           name: item.querySelector('[name="medName"]').value,
@@ -318,19 +315,17 @@
       };
 
       try {
-        const res = await fetch(GAS_URL, {
+        // ★no-corsでCORSエラーを回避
+        await fetch(GAS_URL, {
           method: "POST",
+          mode: "no-cors",
           body: JSON.stringify({ base64DataList: images.map(function(img) { return img.base64; }), survey: surveyData })
         });
-        const result = await res.json();
-        if (result.result === "success") {
-          document.getElementById('mainForm').style.display = 'none';
-          document.getElementById('successMessage').style.display = 'block';
-        } else {
-          alert("送信エラー: " + result.message);
-          document.getElementById('submitBtn').disabled = false;
-          document.getElementById('loading').style.display = 'none';
-        }
+
+        // ★no-corsではレスポンスが読めないため送信完了とみなす
+        document.getElementById('mainForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+
       } catch (err) {
         alert("通信エラー: " + err);
         document.getElementById('submitBtn').disabled = false;
