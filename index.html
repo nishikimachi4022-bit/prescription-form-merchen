@@ -155,7 +155,10 @@
 
   <script>
     const MY_LIFF_ID = "2010084218-Act7PLSx";
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
+
+    // ★★★ 再デプロイ後の最新URLに必ず差し替えてください ★★★
+    const GAS_URL = "https://script.google.com/macros/s/【最新のデプロイURL】/exec";
+
     let userId = "";
     let images = [];
     let currentSlide = 0;
@@ -200,8 +203,8 @@
 
     function renderCarousel() {
       const track = document.getElementById('carouselTrack');
-      const dots = document.getElementById('carouselDots');
-      const wrap = document.getElementById('carouselWrap');
+      const dots  = document.getElementById('carouselDots');
+      const wrap  = document.getElementById('carouselWrap');
 
       if (images.length === 0) {
         wrap.style.display = 'none';
@@ -247,16 +250,13 @@
     // ---------- アンケート ----------
     function toggleArea(selectId, areaId) {
       const val = document.getElementById(selectId).value;
-      const area = document.getElementById(areaId);
-      area.classList.toggle('open', val !== 'なし');
+      document.getElementById(areaId).classList.toggle('open', val !== 'なし');
     }
 
     function toggleDeliveryArea() {
       const val = document.getElementById('delivery').value;
-      const area = document.getElementById('deliveryDetailArea');
-      const nextDay = document.getElementById('nextDayArea');
-      area.classList.toggle('open', val !== '希望なし（薬局で受け取る）');
-      nextDay.style.display = val === '自宅へ配達希望（翌日以降）' ? 'block' : 'none';
+      document.getElementById('deliveryDetailArea').classList.toggle('open', val !== '希望なし（薬局で受け取る）');
+      document.getElementById('nextDayArea').style.display = val === '自宅へ配達希望（翌日以降）' ? 'block' : 'none';
     }
 
     function toggleDeliveryTimeInput() {
@@ -271,7 +271,7 @@
 
     function addResidualItem() {
       const list = document.getElementById('residualList');
-      const div = document.createElement('div');
+      const div  = document.createElement('div');
       div.className = 'residual-item';
       div.innerHTML = `<input type="text" name="medName" class="input-text" placeholder="薬名 / Rp番号">
         <input type="text" name="medCount" class="input-text" placeholder="数量">
@@ -295,35 +295,39 @@
 
       const residualItems = Array.from(document.querySelectorAll('.residual-item')).map(function(item) {
         return {
-          name: item.querySelector('[name="medName"]').value,
+          name:  item.querySelector('[name="medName"]').value,
           count: item.querySelector('[name="medCount"]').value
         };
       });
 
       const deliveryTimeVal = document.getElementById('deliveryTimeSelect').value;
       const surveyData = {
-        userId: userId,
-        residual: document.getElementById('residual').value,
+        userId:       userId,
+        residual:     document.getElementById('residual').value,
         residualItems: residualItems,
-        delivery: document.getElementById('delivery').value,
+        delivery:     document.getElementById('delivery').value,
         deliveryDate: document.getElementById('deliveryDate').value || '',
         deliveryTime: deliveryTimeVal === '希望の時間帯がある方'
           ? document.getElementById('deliveryTimeInput').value
           : deliveryTimeVal,
-        requestType: document.getElementById('requestType').value,
-        requestText: document.getElementById('requestText').value
+        requestType:  document.getElementById('requestType').value,
+        requestText:  document.getElementById('requestText').value
       };
 
       try {
-        // ★no-corsでCORSエラーを回避
+        // ★ no-cors + Content-Type: text/plain でGASに正しく届く
         await fetch(GAS_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify({ base64DataList: images.map(function(img) { return img.base64; }), survey: surveyData })
+          method:  "POST",
+          mode:    "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body:    JSON.stringify({
+            base64DataList: images.map(function(img) { return img.base64; }),
+            survey: surveyData
+          })
         });
 
-        // ★no-corsではレスポンスが読めないため送信完了とみなす
-        document.getElementById('mainForm').style.display = 'none';
+        // no-corsではレスポンスが読めないため送信完了とみなす
+        document.getElementById('mainForm').style.display    = 'none';
         document.getElementById('successMessage').style.display = 'block';
 
       } catch (err) {
