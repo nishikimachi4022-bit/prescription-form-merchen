@@ -1,60 +1,339 @@
-const MY_LIFF_ID = "2009938155-WhhnXhAh";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
-let userId = "";
-    let images = []; // {base64, file}
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>処方箋送信フォーム</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 16px; }
+    .container { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 420px; margin: 0 auto; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #28a745, #20c997); padding: 20px; text-align: center; }
+    .header h2 { color: white; font-size: 1.1em; font-weight: bold; letter-spacing: 0.05em; }
+    .body { padding: 20px; }
+
+    /* カメラボタン */
+    .btn-camera { display: flex; align-items: center; justify-content: center; gap: 8px; background: #007bff; color: white; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 16px; }
+    .btn-camera:active { background: #0056b3; }
+
+    /* カルーセル */
+    .carousel-wrap { position: relative; margin-bottom: 16px; display: none; }
+    .carousel-viewport { overflow: hidden; border-radius: 10px; background: #000; position: relative; height: 200px; }
+    .carousel-track { display: flex; transition: transform 0.3s ease; height: 100%; }
+    .carousel-slide { min-width: 100%; height: 100%; position: relative; flex-shrink: 0; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: contain; }
+    .slide-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.65); color: white; font-size: 13px; font-weight: bold; border-radius: 20px; padding: 2px 10px; z-index: 2; }
+    .btn-delete { position: absolute; bottom: 8px; right: 8px; background: rgba(220,53,69,0.85); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; }
+    .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.45); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; }
+    .carousel-prev { left: 6px; }
+    .carousel-next { right: 6px; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; cursor: pointer; transition: background 0.2s; }
+    .dot.active { background: #28a745; }
+
+    /* アンケート */
+    .survey-group { margin-bottom: 16px; }
+    .survey-label { font-weight: bold; font-size: 13px; color: #333; display: block; margin-bottom: 6px; }
+    select, input[type="text"], input[type="date"], textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #dee2e6; border-radius: 8px;
+      font-size: 13px; color: #333; background: #fafafa; appearance: none; -webkit-appearance: none;
+    }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    textarea { height: 70px; resize: vertical; }
+    .detail-area { display: none; margin-top: 10px; background: #f8f9fa; border-radius: 8px; padding: 12px; border-left: 3px solid #28a745; }
+    .detail-area.open { display: block; }
+    .residual-item { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .residual-item input { flex: 1; }
+    .btn-remove-item { background: #dc3545; color: white; border: none; border-radius: 6px; width: 26px; height: 26px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
+    .add-btn { background: #e8f5e9; color: #28a745; border: 1.5px dashed #28a745; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 4px; }
+    .caution-text { font-size: 11px; color: #dc3545; margin-bottom: 8px; background: #fff3f3; padding: 6px 10px; border-radius: 6px; }
+
+    /* 送信ボタン */
+    .btn-submit { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+    .btn-submit:disabled { background: #adb5bd; cursor: not-allowed; }
+    #loading { display: none; text-align: center; color: #007bff; font-weight: bold; margin-top: 12px; font-size: 14px; }
+
+    /* 完了画面 */
+    #successMessage { display: none; text-align: center; padding: 40px 20px; }
+    #successMessage h2 { color: #28a745; font-size: 1.3em; margin-bottom: 12px; }
+    #successMessage p { color: #555; font-size: 14px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>📋 処方箋送信フォーム</h2>
+    </div>
+
+    <div class="body">
+      <div id="mainForm">
+
+        <!-- カメラ -->
+        <input type="file" id="fileInput" accept="image/*" capture="environment" multiple style="display:none">
+        <button class="btn-camera" onclick="document.getElementById('fileInput').click()">📸 処方箋を撮影・追加する</button>
+
+        <!-- カルーセル -->
+        <div class="carousel-wrap" id="carouselWrap">
+          <div class="carousel-viewport">
+            <div class="carousel-track" id="carouselTrack"></div>
+            <button class="carousel-prev" onclick="changeSlide(-1)">&#8249;</button>
+            <button class="carousel-next" onclick="changeSlide(1)">&#8250;</button>
+          </div>
+          <div class="carousel-dots" id="carouselDots"></div>
+        </div>
+
+        <!-- アンケート -->
+        <div id="questionnaire">
+
+          <div class="survey-group">
+            <label class="survey-label">残薬の調整</label>
+            <select id="residual" onchange="toggleArea('residual', 'residualDetailArea')">
+              <option value="なし">なし（処方通り）</option>
+              <option value="あり（調整希望）">あり（余っている薬を調整したい）</option>
+            </select>
+            <div id="residualDetailArea" class="detail-area">
+              <span class="survey-label" style="font-size:11px;">余っている薬の詳細</span>
+              <div id="residualList">
+                <div class="residual-item">
+                  <input type="text" name="medName" class="input-text" placeholder="薬名 / Rp番号">
+                  <input type="text" name="medCount" class="input-text" placeholder="数量">
+                  <button type="button" class="btn-remove-item" onclick="removeResidualItem(this)">×</button>
+                </div>
+              </div>
+              <button type="button" class="add-btn" onclick="addResidualItem()">＋ 別の薬を追加する</button>
+            </div>
+          </div>
+
+          <div class="survey-group">
+            <label class="survey-label">配達の希望</label>
+            <select id="delivery" onchange="toggleDeliveryArea()">
+              <option value="希望なし（薬局で受け取る）">希望なし（薬局で受け取る）</option>
+              <option value="自宅へ配達希望（当日）">自宅へ配達希望（当日）</option>
+              <option value="自宅へ配達希望（翌日以降）">自宅へ配達希望（翌日以降）</option>
+            </select>
+            <div id="deliveryDetailArea" class="detail-area">
+              <div id="nextDayArea" style="display:none; margin-bottom:10px;">
+                <div class="caution-text">※日曜・祝日の配達は対応できません</div>
+                <label class="survey-label" style="font-size:11px;">希望日</label>
+                <input type="date" id="deliveryDate" style="margin-bottom:10px;">
+              </div>
+              <label class="survey-label" style="font-size:11px;">希望時間帯</label>
+              <select id="deliveryTimeSelect" onchange="toggleDeliveryTimeInput()">
+                <option value="午前中">午前中</option>
+                <option value="午後">午後</option>
+                <option value="希望の時間帯がある方">希望の時間帯がある方</option>
+              </select>
+              <input type="text" id="deliveryTimeInput" style="display:none; margin-top:8px;" placeholder="例：10:00〜11:00など">
+            </div>
+          </div>
+
+          <div class="survey-group">
+            <label class="survey-label">調剤での要望</label>
+            <select id="requestType" onchange="toggleRequestArea()">
+              <option value="なし">なし</option>
+              <option value="調剤に関して">調剤に関して</option>
+              <option value="その他に関して">その他に関して</option>
+            </select>
+            <div id="requestDetailArea" class="detail-area">
+              <textarea id="requestText" placeholder="ご要望をご記入ください"></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <button id="submitBtn" class="btn-submit" onclick="startUpload()" disabled>送信する</button>
+        <div id="loading">送信中...しばらくお待ちください</div>
+      </div>
+
+      <div id="successMessage">
+        <h2>✅ 送信完了</h2>
+        <p>処方箋を受け付けました。<br>準備ができましたらご連絡いたします。<br>この画面を閉じてお待ちください。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MY_LIFF_ID = "2010084218-Act7PLSx";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
+    let userId = "";
     let images = [];
-let currentSlide = 0;
+    let currentSlide = 0;
 
-// ---------- LIFF ----------
-@@ -209,7 +209,6 @@ <h2>✅ 送信完了</h2>
-}
-wrap.style.display = 'block';
+    // ---------- LIFF ----------
+    function loadLiffSdk() {
+      const s = document.createElement('script');
+      s.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      s.onload = initLiff;
+      s.onerror = function() { console.error("SDK読み込み失敗"); };
+      document.body.appendChild(s);
+    }
 
-      // スライド生成
-const badges = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
-track.innerHTML = images.map(function(img, i) {
-return `<div class="carousel-slide">
-@@ -219,7 +218,6 @@ <h2>✅ 送信完了</h2>
-       </div>`;
-}).join('');
+    function initLiff() {
+      liff.init({ liffId: MY_LIFF_ID })
+        .then(function() {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            return liff.getProfile().then(function(profile) {
+              userId = profile.userId;
+              document.getElementById('submitBtn').disabled = false;
+            });
+          }
+        })
+        .catch(function(err) { console.error("LIFF初期化失敗:", err); });
+    }
 
-      // ドット生成
-dots.innerHTML = images.map(function(_, i) {
-return `<div class="dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></div>`;
-}).join('');
-@@ -295,7 +293,6 @@ <h2>✅ 送信完了</h2>
-document.getElementById('submitBtn').disabled = true;
-document.getElementById('loading').style.display = 'block';
+    // ---------- 画像追加 ----------
+    document.getElementById('fileInput').onchange = function(e) {
+      const files = Array.from(e.target.files);
+      files.forEach(function(file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          images.push({ base64: ev.target.result, name: file.name });
+          renderCarousel();
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = "";
+    };
 
-      // 残薬データ収集
-const residualItems = Array.from(document.querySelectorAll('.residual-item')).map(function(item) {
-return {
-name: item.querySelector('[name="medName"]').value,
-@@ -318,19 +315,17 @@ <h2>✅ 送信完了</h2>
-};
+    function renderCarousel() {
+      const track = document.getElementById('carouselTrack');
+      const dots = document.getElementById('carouselDots');
+      const wrap = document.getElementById('carouselWrap');
 
-try {
-        const res = await fetch(GAS_URL, {
+      if (images.length === 0) {
+        wrap.style.display = 'none';
+        return;
+      }
+      wrap.style.display = 'block';
+
+      const badges = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+      track.innerHTML = images.map(function(img, i) {
+        return `<div class="carousel-slide">
+          <img src="${img.base64}" alt="処方箋${i+1}">
+          <div class="slide-badge">${badges[i] || (i+1)}</div>
+          <button class="btn-delete" onclick="deleteImage(${i})">×</button>
+        </div>`;
+      }).join('');
+
+      dots.innerHTML = images.map(function(_, i) {
+        return `<div class="dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></div>`;
+      }).join('');
+
+      goToSlide(Math.min(currentSlide, images.length - 1));
+    }
+
+    function goToSlide(index) {
+      currentSlide = index;
+      document.getElementById('carouselTrack').style.transform = `translateX(-${index * 100}%)`;
+      document.querySelectorAll('.dot').forEach(function(d, i) {
+        d.classList.toggle('active', i === index);
+      });
+    }
+
+    function changeSlide(dir) {
+      const next = (currentSlide + dir + images.length) % images.length;
+      goToSlide(next);
+    }
+
+    function deleteImage(index) {
+      images.splice(index, 1);
+      currentSlide = Math.max(0, Math.min(currentSlide, images.length - 1));
+      renderCarousel();
+    }
+
+    // ---------- アンケート ----------
+    function toggleArea(selectId, areaId) {
+      const val = document.getElementById(selectId).value;
+      const area = document.getElementById(areaId);
+      area.classList.toggle('open', val !== 'なし');
+    }
+
+    function toggleDeliveryArea() {
+      const val = document.getElementById('delivery').value;
+      const area = document.getElementById('deliveryDetailArea');
+      const nextDay = document.getElementById('nextDayArea');
+      area.classList.toggle('open', val !== '希望なし（薬局で受け取る）');
+      nextDay.style.display = val === '自宅へ配達希望（翌日以降）' ? 'block' : 'none';
+    }
+
+    function toggleDeliveryTimeInput() {
+      const val = document.getElementById('deliveryTimeSelect').value;
+      document.getElementById('deliveryTimeInput').style.display = val === '希望の時間帯がある方' ? 'block' : 'none';
+    }
+
+    function toggleRequestArea() {
+      const val = document.getElementById('requestType').value;
+      document.getElementById('requestDetailArea').classList.toggle('open', val !== 'なし');
+    }
+
+    function addResidualItem() {
+      const list = document.getElementById('residualList');
+      const div = document.createElement('div');
+      div.className = 'residual-item';
+      div.innerHTML = `<input type="text" name="medName" class="input-text" placeholder="薬名 / Rp番号">
+        <input type="text" name="medCount" class="input-text" placeholder="数量">
+        <button type="button" class="btn-remove-item" onclick="removeResidualItem(this)">×</button>`;
+      list.appendChild(div);
+    }
+
+    function removeResidualItem(btn) {
+      const items = document.querySelectorAll('.residual-item');
+      if (items.length > 1) btn.parentElement.remove();
+    }
+
+    // ---------- 送信 ----------
+    async function startUpload() {
+      if (images.length === 0) {
+        alert("写真を撮影してください");
+        return;
+      }
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+
+      const residualItems = Array.from(document.querySelectorAll('.residual-item')).map(function(item) {
+        return {
+          name: item.querySelector('[name="medName"]').value,
+          count: item.querySelector('[name="medCount"]').value
+        };
+      });
+
+      const deliveryTimeVal = document.getElementById('deliveryTimeSelect').value;
+      const surveyData = {
+        userId: userId,
+        residual: document.getElementById('residual').value,
+        residualItems: residualItems,
+        delivery: document.getElementById('delivery').value,
+        deliveryDate: document.getElementById('deliveryDate').value || '',
+        deliveryTime: deliveryTimeVal === '希望の時間帯がある方'
+          ? document.getElementById('deliveryTimeInput').value
+          : deliveryTimeVal,
+        requestType: document.getElementById('requestType').value,
+        requestText: document.getElementById('requestText').value
+      };
+
+      try {
         // ★no-corsでCORSエラーを回避
         await fetch(GAS_URL, {
-method: "POST",
+          method: "POST",
           mode: "no-cors",
-body: JSON.stringify({ base64DataList: images.map(function(img) { return img.base64; }), survey: surveyData })
-});
-        const result = await res.json();
-        if (result.result === "success") {
-          document.getElementById('mainForm').style.display = 'none';
-          document.getElementById('successMessage').style.display = 'block';
-        } else {
-          alert("送信エラー: " + result.message);
-          document.getElementById('submitBtn').disabled = false;
-          document.getElementById('loading').style.display = 'none';
-        }
+          body: JSON.stringify({ base64DataList: images.map(function(img) { return img.base64; }), survey: surveyData })
+        });
 
         // ★no-corsではレスポンスが読めないため送信完了とみなす
         document.getElementById('mainForm').style.display = 'none';
         document.getElementById('successMessage').style.display = 'block';
 
-} catch (err) {
-alert("通信エラー: " + err);
-document.getElementById('submitBtn').disabled = false;
+      } catch (err) {
+        alert("通信エラー: " + err);
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    loadLiffSdk();
+  </script>
+</body>
+</html>
