@@ -23,6 +23,7 @@
       overflow: hidden;
     }
 
+    /* ヘッダー */
     .header {
       background: linear-gradient(135deg, #28a745, #20c997);
       padding: 20px;
@@ -37,6 +38,7 @@
 
     .body { padding: 20px; }
 
+    /* 説明文 */
     .intro {
       font-size: 13px;
       color: #444;
@@ -44,6 +46,7 @@
       margin-bottom: 16px;
     }
 
+    /* 要配慮個人情報バッジ */
     .sensitive-badge {
       display: inline-block;
       background: #fff3cd;
@@ -56,6 +59,7 @@
       margin-bottom: 12px;
     }
 
+    /* ポリシー本文スクロールエリア */
     .policy-box {
       border: 1.5px solid #dee2e6;
       border-radius: 10px;
@@ -101,6 +105,7 @@
       word-break: break-all;
     }
 
+    /* スクロール促進テキスト */
     .scroll-hint {
       text-align: center;
       font-size: 11px;
@@ -109,6 +114,7 @@
     }
     .scroll-hint.hidden { display: none; }
 
+    /* チェックボックス */
     .check-wrap {
       display: flex;
       align-items: flex-start;
@@ -118,6 +124,7 @@
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 16px;
+      cursor: pointer;
     }
     .check-wrap input[type="checkbox"] {
       width: 20px;
@@ -127,17 +134,14 @@
       flex-shrink: 0;
       cursor: pointer;
     }
-    .check-wrap input[type="checkbox"]:disabled {
-      cursor: not-allowed;
-      opacity: 0.4;
-    }
     .check-wrap label {
       font-size: 13px;
       color: #333;
       line-height: 1.6;
-      cursor: default;
+      cursor: pointer;
     }
 
+    /* 同意ボタン */
     .btn-agree {
       background: linear-gradient(135deg, #28a745, #20c997);
       color: white;
@@ -149,7 +153,6 @@
       cursor: pointer;
       width: 100%;
       transition: opacity 0.2s;
-      display: none;
     }
     .btn-agree:disabled {
       background: #adb5bd;
@@ -157,13 +160,7 @@
     }
     .btn-agree:not(:disabled):active { opacity: 0.85; }
 
-    #loadingUser {
-      text-align: center;
-      color: #888;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
+    /* ローディング */
     #loading {
       display: none;
       text-align: center;
@@ -173,6 +170,7 @@
       font-size: 14px;
     }
 
+    /* 外部リンク注記 */
     .external-note {
       font-size: 11px;
       color: #888;
@@ -191,7 +189,7 @@
 
     <div class="body">
       <p class="intro">
-        LINE処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
+        ＬＩＮＥ処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
       </p>
 
       <span class="sensitive-badge">個人情報の取り扱いについて</span>
@@ -252,17 +250,14 @@
       <p class="scroll-hint" id="scrollHint">▼ スクロールして全文をご確認ください</p>
 
       <!-- チェックボックス -->
-      <div class="check-wrap" onclick="event.stopPropagation()">
-        <input type="checkbox" id="agreeCheck" disabled onchange="onCheckChange()">
-        <label>
+      <div class="check-wrap" onclick="toggleCheck()">
+        <input type="checkbox" id="agreeCheck" disabled>
+        <label for="agreeCheck">
           上記の個人情報の取扱いについて確認し、同意します。
         </label>
       </div>
 
-      <!-- 読み込み中（userId取得完了まで表示） -->
-      <p id="loadingUser">⏳ 読み込み中...</p>
-
-      <!-- 同意ボタン（userId取得完了後に表示） -->
+      <!-- 同意ボタン -->
       <button class="btn-agree" id="agreeBtn" onclick="submitConsent()" disabled>
         同意して処方箋を送信する
       </button>
@@ -278,12 +273,12 @@
     // ======================================================
     // 設定
     // ======================================================
-    const MY_LIFF_ID = "2010084218-Act7PLSx";
-    const GAS_URL    = "https://script.google.com/macros/s/AKfycbzMghGPubDohfjZinJKNyej2pk2ELY_pNJiJg_XYq5w-hagDB_9Wwi2s-jEUnkQXZKm1g/exec";
-    const POLICY_VER = "2025-05";
-    const FORM_URL   = "./index.html";
+    const MY_LIFF_ID  = "2010084218-Act7PLSx";  // 既存のLIFF IDをそのまま使用
+    const GAS_URL     = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
+    const POLICY_VER  = "2025-05";  // ポリシー改訂時にここを更新する
+    const FORM_URL    = "./index.html";  // 同意後に遷移する処方箋フォーム
 
-    let userId  = "";
+    let userId = "";
     let scrolled = false;
 
     // ======================================================
@@ -293,10 +288,6 @@
       const s = document.createElement('script');
       s.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
       s.onload = initLiff;
-      s.onerror = function() {
-        document.getElementById('loadingUser').textContent =
-          "読み込みに失敗しました。画面を閉じて再度お試しください。";
-      };
       document.body.appendChild(s);
     }
 
@@ -307,19 +298,12 @@
         } else {
           liff.getProfile().then(function(profile) {
             userId = profile.userId;
-
-            // userId取得完了 → ボタンを表示・読み込み中テキストを非表示
-            document.getElementById('loadingUser').style.display = 'none';
-            document.getElementById('agreeBtn').style.display = 'block';
-
-            // 同意済みチェック
+            // 同意済みかチェック
             checkAlreadyConsented(userId);
           });
         }
       }).catch(function(err) {
         console.error("LIFF初期化失敗:", err);
-        document.getElementById('loadingUser').textContent =
-          "読み込みに失敗しました。画面を閉じて再度お試しください。";
       });
     }
 
@@ -331,11 +315,13 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.consented) {
+            // 同意済み → フォームへ直接遷移
             location.href = FORM_URL;
           }
+          // 未同意 → この画面のまま（何もしない）
         })
         .catch(function() {
-          // チェック失敗時はこの画面を表示したまま継続
+          // チェック失敗時はこの画面を表示したまま
         });
     }
 
@@ -352,11 +338,10 @@
       }
     });
 
-    // ======================================================
-    // チェックボックス変更 → 同意ボタンの有効・無効を切り替え
-    // ======================================================
-    function onCheckChange() {
+    function toggleCheck() {
       const cb = document.getElementById('agreeCheck');
+      if (cb.disabled) return;
+      cb.checked = !cb.checked;
       document.getElementById('agreeBtn').disabled = !cb.checked;
     }
 
