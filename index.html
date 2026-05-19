@@ -110,7 +110,7 @@
             <select id="delivery" onchange="toggleDeliveryArea()">
               <option value="希望なし（薬局で受け取る）">希望なし（薬局で受け取る）</option>
               <option value="自宅へ配達希望（当日）">自宅へ配達希望（当日）</option>
-              <option value="自宅へ配達希望（翌日以降）">自宅へ配達希望（翌日以降）</option>
+              <option value="自宅へ配達希望（翌日以降）">自宅へ配達希告（翌日以降）</option>
             </select>
             <div id="deliveryDetailArea" class="detail-area">
               <div id="nextDayArea" style="display:none; margin-bottom:10px;">
@@ -315,17 +315,19 @@
       };
 
       try {
-        // ★no-corsでCORSエラーを回避
-        await fetch(GAS_URL, {
+        const res = await fetch(GAS_URL, {
           method: "POST",
-          mode: "no-cors",
           body: JSON.stringify({ base64DataList: images.map(function(img) { return img.base64; }), survey: surveyData })
         });
-
-        // ★no-corsではレスポンスが読めないため送信完了とみなす
-        document.getElementById('mainForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-
+        const result = await res.json();
+        if (result.result === "success") {
+          document.getElementById('mainForm').style.display = 'none';
+          document.getElementById('successMessage').style.display = 'block';
+        } else {
+          alert("送信エラー: " + result.message);
+          document.getElementById('submitBtn').disabled = false;
+          document.getElementById('loading').style.display = 'none';
+        }
       } catch (err) {
         alert("通信エラー: " + err);
         document.getElementById('submitBtn').disabled = false;
