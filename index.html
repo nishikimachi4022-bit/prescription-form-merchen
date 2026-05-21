@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <base target="_top">
   <meta charset="utf-8">
@@ -7,15 +7,59 @@
   <title>処方箋送信フォーム</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 16px; }
-    .container { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 420px; margin: 0 auto; overflow: hidden; }
-    .header { background: linear-gradient(135deg, #28a745, #20c997); padding: 20px; text-align: center; }
-    .header h2 { color: white; font-size: 1.1em; font-weight: bold; letter-spacing: 0.05em; }
+    
+    body { 
+      font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif; 
+      background: linear-gradient(160deg, #e8f4fd, #f0f8ff); 
+      min-height: 100vh; 
+      padding: 16px; 
+    }
+    
+    .container { 
+      background: white; 
+      border-radius: 16px; 
+      box-shadow: 0 4px 20px rgba(0, 140, 210, 0.12); 
+      max-width: 420px; 
+      margin: 0 auto; 
+      overflow: hidden; 
+    }
+    
+    /* ヘッダー：水色〜シアンのグラデーション */
+    .header { 
+      background: linear-gradient(135deg, #2196f3, #00bcd4); 
+      padding: 20px; 
+      text-align: center; 
+    }
+    .header h2 { 
+      color: white; 
+      font-size: 1.05em; 
+      font-weight: bold; 
+      letter-spacing: 0.05em; 
+      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    
     .body { padding: 20px; }
 
     /* カメラボタン */
-    .btn-camera { display: flex; align-items: center; justify-content: center; gap: 8px; background: #007bff; color: white; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 16px; }
-    .btn-camera:active { background: #0056b3; }
+    .btn-camera { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      background: linear-gradient(135deg, #2196f3, #00bcd4); 
+      color: white; 
+      padding: 14px; 
+      border: none; 
+      border-radius: 10px; 
+      font-size: 15px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%; 
+      margin-bottom: 16px; 
+      box-shadow: 0 3px 10px rgba(33, 150, 243, 0.2);
+      transition: opacity 0.2s;
+    }
+    .btn-camera:active { opacity: 0.85; }
 
     /* カルーセル */
     .carousel-wrap { position: relative; margin-bottom: 16px; display: none; }
@@ -30,34 +74,93 @@
     .carousel-next { right: 6px; }
     .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; cursor: pointer; transition: background 0.2s; }
-    .dot.active { background: #28a745; }
+    .dot.active { background: #2196f3; }
 
-    /* アンケート */
+    /* アンケート・入力エリア */
     .survey-group { margin-bottom: 16px; }
-    .survey-label { font-weight: bold; font-size: 13px; color: #333; display: block; margin-bottom: 6px; }
+    .survey-label { font-weight: bold; font-size: 13px; color: #1a3a5c; display: block; margin-bottom: 6px; }
+    
     select, input[type="text"], input[type="date"], textarea {
-      width: 100%; padding: 10px 12px; border: 1.5px solid #dee2e6; border-radius: 8px;
-      font-size: 13px; color: #333; background: #fafafa; appearance: none; -webkit-appearance: none;
+      width: 100%; 
+      padding: 10px 12px; 
+      border: 1.5px solid #b3d9f7; 
+      border-radius: 8px;
+      font-size: 13px; 
+      color: #444; 
+      background: #f7fbff; 
+      appearance: none; 
+      -webkit-appearance: none;
+      outline: none;
     }
-    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+      border-color: #2196f3;
+      background: #white;
+    }
+    select { 
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232196f3' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); 
+      background-repeat: no-repeat; 
+      background-position: right 12px center; 
+      padding-right: 32px; 
+    }
     textarea { height: 70px; resize: vertical; }
-    .detail-area { display: none; margin-top: 10px; background: #f8f9fa; border-radius: 8px; padding: 12px; border-left: 3px solid #28a745; }
+    
+    /* 詳細展開エリア：薄い水色背景と左の太線アクセント */
+    .detail-area { 
+      display: none; 
+      margin-top: 10px; 
+      background: #e3f2fd; 
+      border-radius: 8px; 
+      padding: 12px; 
+      border-left: 3px solid #2196f3; 
+    }
     .detail-area.open { display: block; }
     .residual-item { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
-    .residual-item input { flex: 1; }
+    .residual-item input { flex: 1; background: #ffffff; }
     .btn-remove-item { background: #dc3545; color: white; border: none; border-radius: 6px; width: 26px; height: 26px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
-    .add-btn { background: #e8f5e9; color: #28a745; border: 1.5px dashed #28a745; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 4px; }
-    .caution-text { font-size: 11px; color: #dc3545; margin-bottom: 8px; background: #fff3f3; padding: 6px 10px; border-radius: 6px; }
+    
+    /* 別の薬を追加するボタン：点線の水色デザイン */
+    .add-btn { 
+      background: #f7fbff; 
+      color: #1976d2; 
+      border: 1.5px dashed #90caf9; 
+      border-radius: 8px; 
+      padding: 8px; 
+      font-size: 12px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%; 
+      margin-top: 4px; 
+    }
+    .caution-text { font-size: 11px; color: #0d47a1; margin-bottom: 8px; background: #e3f2fd; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #64b5f6; }
 
     /* 送信ボタン */
-    .btn-submit { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
-    .btn-submit:disabled { background: #adb5bd; cursor: not-allowed; }
-    #loading { display: none; text-align: center; color: #007bff; font-weight: bold; margin-top: 12px; font-size: 14px; }
+    .btn-submit { 
+      background: linear-gradient(135deg, #2196f3, #00bcd4); 
+      color: white; 
+      padding: 16px; 
+      border: none; 
+      border-radius: 10px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%; 
+      margin-top: 8px; 
+      transition: opacity 0.2s;
+      box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);
+    }
+    .btn-submit:disabled { 
+      background: #b0bec5; 
+      box-shadow: none; 
+      cursor: not-allowed; 
+    }
+    .btn-submit:not(:disabled):active { opacity: 0.85; }
+    
+    #loading { display: none; text-align: center; color: #2196f3; font-weight: bold; margin-top: 12px; font-size: 14px; }
 
     /* 完了画面 */
     #successMessage { display: none; text-align: center; padding: 40px 20px; }
-    #successMessage h2 { color: #28a745; font-size: 1.3em; margin-bottom: 12px; }
-    #successMessage p { color: #555; font-size: 14px; line-height: 1.7; }
+    #successMessage h2 { color: #1976d2; font-size: 1.3em; margin-bottom: 12px; }
+    #successMessage p { color: #444; font-size: 14px; line-height: 1.7; }
   </style>
 </head>
 <body>
@@ -69,11 +172,9 @@
     <div class="body">
       <div id="mainForm">
 
-        <!-- カメラ -->
         <input type="file" id="fileInput" accept="image/*" capture="environment" multiple style="display:none">
         <button class="btn-camera" onclick="document.getElementById('fileInput').click()">📸 処方箋を撮影・追加する</button>
 
-        <!-- カルーセル -->
         <div class="carousel-wrap" id="carouselWrap">
           <div class="carousel-viewport">
             <div class="carousel-track" id="carouselTrack"></div>
@@ -83,7 +184,6 @@
           <div class="carousel-dots" id="carouselDots"></div>
         </div>
 
-        <!-- アンケート -->
         <div id="questionnaire">
 
           <div class="survey-group">
@@ -93,7 +193,7 @@
               <option value="あり（調整希望）">あり（余っている薬を調整したい）</option>
             </select>
             <div id="residualDetailArea" class="detail-area">
-              <span class="survey-label" style="font-size:11px;">余っている薬の詳細</span>
+              <span class="survey-label" style="font-size:11px; color:#1565c0;">余っている薬の詳細</span>
               <div id="residualList">
                 <div class="residual-item">
                   <input type="text" name="medName" class="input-text" placeholder="薬名 / Rp番号">
@@ -110,15 +210,15 @@
             <select id="delivery" onchange="toggleDeliveryArea()">
               <option value="希望なし（薬局で受け取る）">希望なし（薬局で受け取る）</option>
               <option value="自宅へ配達希望（当日）">自宅へ配達希望（当日）</option>
-              <option value="自宅へ配達希望（翌日以降）">自宅へ配達希告（翌日以降）</option>
+              <option value="自宅へ配達希望（翌日以降）">自宅へ配達希望（翌日以降）</option>
             </select>
             <div id="deliveryDetailArea" class="detail-area">
               <div id="nextDayArea" style="display:none; margin-bottom:10px;">
                 <div class="caution-text">※日曜・祝日の配達は対応できません</div>
-                <label class="survey-label" style="font-size:11px;">希望日</label>
+                <label class="survey-label" style="font-size:11px; color:#1565c0;">希望日</label>
                 <input type="date" id="deliveryDate" style="margin-bottom:10px;">
               </div>
-              <label class="survey-label" style="font-size:11px;">希望時間帯</label>
+              <label class="survey-label" style="font-size:11px; color:#1565c0;">希望時間帯</label>
               <select id="deliveryTimeSelect" onchange="toggleDeliveryTimeInput()">
                 <option value="午前中">午前中</option>
                 <option value="午後">午後</option>
