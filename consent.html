@@ -9,7 +9,7 @@
 
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
-      background: #f0f4f8;
+      background: linear-gradient(160deg, #e8f4fd, #f0f8ff);
       min-height: 100vh;
       padding: 16px;
     }
@@ -17,7 +17,7 @@
     .container {
       background: white;
       border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 20px rgba(0, 140, 210, 0.12);
       max-width: 420px;
       margin: 0 auto;
       overflow: hidden;
@@ -25,7 +25,7 @@
 
     /* ヘッダー */
     .header {
-      background: linear-gradient(135deg, #28a745, #20c997);
+      background: linear-gradient(135deg, #2196f3, #00bcd4);
       padding: 20px;
       text-align: center;
     }
@@ -34,11 +34,11 @@
       font-size: 1.05em;
       font-weight: bold;
       letter-spacing: 0.05em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
 
     .body { padding: 20px; }
 
-    /* 説明文 */
     .intro {
       font-size: 13px;
       color: #444;
@@ -46,22 +46,21 @@
       margin-bottom: 16px;
     }
 
-    /* 要配慮個人情報バッジ */
     .sensitive-badge {
       display: inline-block;
-      background: #fff3cd;
-      border: 1px solid #ffc107;
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
       border-radius: 6px;
       padding: 3px 8px;
       font-size: 11px;
-      color: #856404;
+      color: #1565c0;
       font-weight: bold;
       margin-bottom: 12px;
     }
 
     /* ポリシー本文スクロールエリア */
     .policy-box {
-      border: 1.5px solid #dee2e6;
+      border: 1.5px solid #b3d9f7;
       border-radius: 10px;
       height: 280px;
       overflow-y: auto;
@@ -69,17 +68,17 @@
       font-size: 12px;
       color: #444;
       line-height: 1.75;
-      background: #fafafa;
-      margin-bottom: 6px;
+      background: #f7fbff;
+      margin-bottom: 16px;
       -webkit-overflow-scrolling: touch;
     }
 
     .policy-box h3 {
       font-size: 12px;
       font-weight: bold;
-      color: #28a745;
+      color: #1976d2;
       margin: 12px 0 4px;
-      border-left: 3px solid #28a745;
+      border-left: 3px solid #2196f3;
       padding-left: 7px;
     }
     .policy-box h3:first-child { margin-top: 0; }
@@ -91,59 +90,50 @@
     .policy-box ul li { margin-bottom: 3px; }
 
     .policy-box .caution {
-      background: #fff8e1;
-      border-left: 3px solid #ffc107;
+      background: #e3f2fd;
+      border-left: 3px solid #64b5f6;
       padding: 6px 10px;
       border-radius: 4px;
       font-size: 11px;
-      color: #6d4c00;
+      color: #0d47a1;
       margin: 8px 0;
     }
 
     .policy-box a {
-      color: #28a745;
+      color: #1976d2;
       word-break: break-all;
     }
 
-    /* スクロール促進テキスト */
-    .scroll-hint {
-      text-align: center;
-      font-size: 11px;
-      color: #aaa;
-      margin-bottom: 14px;
-    }
-    .scroll-hint.hidden { display: none; }
-
-    /* チェックボックス */
+    /* チェックボックス：□部分のみクリック有効 */
     .check-wrap {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      background: #f0fff4;
-      border: 1.5px solid #b2dfdb;
+      background: #e3f2fd;
+      border: 1.5px solid #90caf9;
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 16px;
-      cursor: pointer;
     }
     .check-wrap input[type="checkbox"] {
       width: 20px;
       height: 20px;
       margin-top: 1px;
-      accent-color: #28a745;
+      accent-color: #2196f3;
       flex-shrink: 0;
       cursor: pointer;
     }
     .check-wrap label {
       font-size: 13px;
-      color: #333;
+      color: #1a3a5c;
       line-height: 1.6;
-      cursor: pointer;
+      cursor: default;
+      user-select: none;
     }
 
     /* 同意ボタン */
     .btn-agree {
-      background: linear-gradient(135deg, #28a745, #20c997);
+      background: linear-gradient(135deg, #2196f3, #00bcd4);
       color: white;
       padding: 16px;
       border: none;
@@ -153,24 +143,24 @@
       cursor: pointer;
       width: 100%;
       transition: opacity 0.2s;
+      box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);
     }
     .btn-agree:disabled {
-      background: #adb5bd;
+      background: #b0bec5;
+      box-shadow: none;
       cursor: not-allowed;
     }
     .btn-agree:not(:disabled):active { opacity: 0.85; }
 
-    /* ローディング */
     #loading {
       display: none;
       text-align: center;
-      color: #28a745;
+      color: #2196f3;
       font-weight: bold;
       margin-top: 12px;
       font-size: 14px;
     }
 
-    /* 外部リンク注記 */
     .external-note {
       font-size: 11px;
       color: #888;
@@ -178,7 +168,7 @@
       margin-top: 14px;
       line-height: 1.6;
     }
-    .external-note a { color: #28a745; }
+    .external-note a { color: #1976d2; }
   </style>
 </head>
 <body>
@@ -189,7 +179,7 @@
 
     <div class="body">
       <p class="intro">
-        ＬＩＮＥ処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
+        LINE処方せん受付をご利用いただくにあたって、当薬局での個人情報の取扱いについてご確認、ご同意にご協力ください。
       </p>
 
       <span class="sensitive-badge">個人情報の取り扱いについて</span>
@@ -247,12 +237,10 @@
 
       </div>
 
-      <p class="scroll-hint" id="scrollHint">▼ スクロールして全文をご確認ください</p>
-
-      <!-- チェックボックス -->
-      <div class="check-wrap" onclick="toggleCheck()">
-        <input type="checkbox" id="agreeCheck" disabled>
-        <label for="agreeCheck">
+      <!-- チェックボックス（□部分のみクリック有効・スクロール不要） -->
+      <div class="check-wrap">
+        <input type="checkbox" id="agreeCheck" onchange="onCheckChange()">
+        <label for="">
           上記の個人情報の取扱いについて確認し、同意します。
         </label>
       </div>
@@ -273,13 +261,12 @@
     // ======================================================
     // 設定
     // ======================================================
-    const MY_LIFF_ID  = "2010084218-Act7PLSx";  // 既存のLIFF IDをそのまま使用
+    const MY_LIFF_ID  = "2010084218-Act7PLSx";
     const GAS_URL     = "https://script.google.com/macros/s/AKfycbzdo0hSsutdUp2VgSw3FV4Qqb6vq470iWqvjdKOFrP-4lpy1pfeDvbVAsggRe7xvxPC-g/exec";
-    const POLICY_VER  = "2025-05";  // ポリシー改訂時にここを更新する
-    const FORM_URL    = "./index.html";  // 同意後に遷移する処方箋フォーム
+    const POLICY_VER  = "2025-05";
+    const FORM_URL    = "./index.html";
 
     let userId = "";
-    let scrolled = false;
 
     // ======================================================
     // LIFF初期化
@@ -288,6 +275,9 @@
       const s = document.createElement('script');
       s.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
       s.onload = initLiff;
+      s.onerror = function() {
+        console.error("SDK読み込み失敗");
+      };
       document.body.appendChild(s);
     }
 
@@ -298,7 +288,6 @@
         } else {
           liff.getProfile().then(function(profile) {
             userId = profile.userId;
-            // 同意済みかチェック
             checkAlreadyConsented(userId);
           });
         }
@@ -308,17 +297,15 @@
     }
 
     // ======================================================
-    // 同意済みチェック（GASへ問い合わせ）
+    // 同意済みチェック
     // ======================================================
     function checkAlreadyConsented(uid) {
       fetch(GAS_URL + "?action=checkConsent&userId=" + encodeURIComponent(uid) + "&version=" + POLICY_VER)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.consented) {
-            // 同意済み → フォームへ直接遷移
             location.href = FORM_URL;
           }
-          // 未同意 → この画面のまま（何もしない）
         })
         .catch(function() {
           // チェック失敗時はこの画面を表示したまま
@@ -326,22 +313,10 @@
     }
 
     // ======================================================
-    // スクロール検知 → チェックボックスを有効化
+    // チェックボックスの変化でボタンの有効/無効を切り替え
     // ======================================================
-    document.getElementById('policyBox').addEventListener('scroll', function() {
-      const box = this;
-      const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 10;
-      if (atBottom && !scrolled) {
-        scrolled = true;
-        document.getElementById('agreeCheck').disabled = false;
-        document.getElementById('scrollHint').classList.add('hidden');
-      }
-    });
-
-    function toggleCheck() {
+    function onCheckChange() {
       const cb = document.getElementById('agreeCheck');
-      if (cb.disabled) return;
-      cb.checked = !cb.checked;
       document.getElementById('agreeBtn').disabled = !cb.checked;
     }
 
